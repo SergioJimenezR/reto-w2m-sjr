@@ -1,7 +1,7 @@
 package com.w2m.sergiojimenez.retow2msjr.model;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -10,6 +10,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+
+import org.springframework.http.HttpStatus;
+
+import com.w2m.sergiojimenez.retow2msjr.exceptions.ParamNecesarioInexistenteException;
+import com.w2m.sergiojimenez.retow2msjr.exceptions.PesoInvalidoException;
+import com.w2m.sergiojimenez.retow2msjr.exceptions.UUIDInvalidoException;
+import com.w2m.sergiojimenez.retow2msjr.utils.Utilidades;
 
 @Entity
 public class Superheroe implements Serializable {
@@ -22,22 +29,23 @@ public class Superheroe implements Serializable {
 	@Id
 	@NotNull
 	@Column(length = 36)
-	private String uuid;
+	private String uuid; // PK.
 
 	@NotNull
 	@Column(unique = true)
-	private String nombre;
+	private String nombre; // Unique.
 
 	@Positive
-	private double peso;
+	private Double peso; // Mayor que 0.
 
-	private Date fechaNacimiento;
+	private LocalDateTime fechaNacimiento;
 
 	public Superheroe() {
-		setUuid(UUID.randomUUID().toString());
+		this.uuid = UUID.randomUUID().toString();
 	}
 
-	public Superheroe(@NotNull String nombre, @Positive double peso, Date fechaNacimiento) {
+	public Superheroe(@NotNull String nombre, @Positive Double peso, LocalDateTime fechaNacimiento)
+			throws ParamNecesarioInexistenteException, PesoInvalidoException {
 		this();
 		setNombre(nombre);
 		setPeso(peso);
@@ -48,7 +56,12 @@ public class Superheroe implements Serializable {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(String uuid) throws ParamNecesarioInexistenteException, UUIDInvalidoException {
+		if (uuid == null) // @NotNull.
+			throw new ParamNecesarioInexistenteException(HttpStatus.EXPECTATION_FAILED, "El UUID es necesario.");
+		else if (!Utilidades.checkFormatoUuid(uuid)) // Regex.
+			throw new UUIDInvalidoException(HttpStatus.FORBIDDEN,
+					"El UUID proporcionado '" + uuid + "' no cumple con el formato.");
 		this.uuid = uuid;
 	}
 
@@ -56,23 +69,27 @@ public class Superheroe implements Serializable {
 		return nombre;
 	}
 
-	public void setNombre(String nombre) {
+	public void setNombre(String nombre) throws ParamNecesarioInexistenteException {
+		if (nombre == null) // @NotNull.
+			throw new ParamNecesarioInexistenteException(HttpStatus.EXPECTATION_FAILED, "El nombre es necesario.");
 		this.nombre = nombre;
 	}
 
-	public double getPeso() {
+	public Double getPeso() {
 		return peso;
 	}
 
-	public void setPeso(double peso) {
+	public void setPeso(Double peso) throws PesoInvalidoException {
+		if (peso <= 0) // @Positive.
+			throw new PesoInvalidoException(HttpStatus.FORBIDDEN, "El peso indicado '" + peso + "' es inválido.");
 		this.peso = peso;
 	}
 
-	public Date getFechaNacimiento() {
+	public LocalDateTime getFechaNacimiento() {
 		return fechaNacimiento;
 	}
 
-	public void setFechaNacimiento(Date fechaNacimiento) {
+	public void setFechaNacimiento(LocalDateTime fechaNacimiento) {
 		this.fechaNacimiento = fechaNacimiento;
 	}
 
@@ -97,8 +114,7 @@ public class Superheroe implements Serializable {
 			return false;
 		Superheroe other = (Superheroe) obj;
 		return Objects.equals(fechaNacimiento, other.fechaNacimiento) && Objects.equals(nombre, other.nombre)
-				&& Double.doubleToLongBits(peso) == Double.doubleToLongBits(other.peso)
-				&& Objects.equals(uuid, other.uuid);
+				&& Objects.equals(peso, other.peso) && Objects.equals(uuid, other.uuid);
 	}
 
 }
