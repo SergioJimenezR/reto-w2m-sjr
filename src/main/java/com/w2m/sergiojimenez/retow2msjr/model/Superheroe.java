@@ -14,8 +14,8 @@ import javax.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 
 import com.w2m.sergiojimenez.retow2msjr.exceptions.ParamNecesarioInexistenteException;
-import com.w2m.sergiojimenez.retow2msjr.exceptions.PesoInvalidoException;
-import com.w2m.sergiojimenez.retow2msjr.exceptions.UUIDInvalidoException;
+import com.w2m.sergiojimenez.retow2msjr.exceptions.PesoNegativoException;
+import com.w2m.sergiojimenez.retow2msjr.exceptions.FormatoUUIDInvalidoException;
 import com.w2m.sergiojimenez.retow2msjr.utils.Utilidades;
 
 @Entity
@@ -45,7 +45,7 @@ public class Superheroe implements Serializable {
 	}
 
 	public Superheroe(@NotNull String nombre, @Positive Double peso, LocalDateTime fechaNacimiento)
-			throws ParamNecesarioInexistenteException, PesoInvalidoException {
+			throws ParamNecesarioInexistenteException, PesoNegativoException {
 		this();
 		setNombre(nombre);
 		setPeso(peso);
@@ -56,11 +56,11 @@ public class Superheroe implements Serializable {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) throws ParamNecesarioInexistenteException, UUIDInvalidoException {
+	public void setUuid(String uuid) throws ParamNecesarioInexistenteException, FormatoUUIDInvalidoException {
 		if (uuid == null) // @NotNull.
 			throw new ParamNecesarioInexistenteException(HttpStatus.EXPECTATION_FAILED, "El UUID es necesario.");
 		else if (!Utilidades.checkFormatoUuid(uuid)) // Regex.
-			throw new UUIDInvalidoException(HttpStatus.FORBIDDEN,
+			throw new FormatoUUIDInvalidoException(HttpStatus.FORBIDDEN,
 					"El UUID proporcionado '" + uuid + "' no cumple con el formato.");
 		this.uuid = uuid;
 	}
@@ -79,9 +79,9 @@ public class Superheroe implements Serializable {
 		return peso;
 	}
 
-	public void setPeso(Double peso) throws PesoInvalidoException {
+	public void setPeso(Double peso) throws PesoNegativoException {
 		if (peso <= 0) // @Positive.
-			throw new PesoInvalidoException(HttpStatus.FORBIDDEN, "El peso indicado '" + peso + "' es inválido.");
+			throw new PesoNegativoException(HttpStatus.FORBIDDEN, "El peso indicado '" + peso + "' es inválido.");
 		this.peso = peso;
 	}
 
@@ -113,8 +113,9 @@ public class Superheroe implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		Superheroe other = (Superheroe) obj;
-		return Objects.equals(fechaNacimiento, other.fechaNacimiento) && Objects.equals(nombre, other.nombre)
-				&& Objects.equals(peso, other.peso) && Objects.equals(uuid, other.uuid);
+		return Objects.equals(nombre, other.nombre) && Objects.equals(peso, other.peso)
+				&& Objects.equals(uuid, other.uuid) && Utilidades.parseLocalDateTimeToString(fechaNacimiento)
+						.equals(Utilidades.parseLocalDateTimeToString(other.fechaNacimiento));
 	}
 
 }

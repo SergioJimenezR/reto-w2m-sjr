@@ -1,6 +1,5 @@
 package com.w2m.sergiojimenez.retow2msjr.utils;
 
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -15,14 +14,14 @@ public class Utilidades {
 		return DigestUtils.sha3_512Hex(cadena);
 	}
 
-	private static final String DATE_FORMAT_PATTERN = "MM-dd-yyyy";
+	private static final String DATE_FORMAT_PATTERN = "dd-MM-yyyy HH:mm:ss";
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT_PATTERN);
 
-	public static String parseDateToString(LocalDateTime fecha) {
+	public static String parseLocalDateTimeToString(LocalDateTime fecha) {
 		return fecha.format(formatter);
 	}
 
-	public static LocalDateTime parseStringToDate(String strFecha) {
+	public static LocalDateTime parseStringToLocalDateTime(String strFecha) {
 		return LocalDateTime.parse(strFecha, formatter);
 	}
 
