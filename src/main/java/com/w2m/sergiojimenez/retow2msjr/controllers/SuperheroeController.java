@@ -3,6 +3,7 @@ package com.w2m.sergiojimenez.retow2msjr.controllers;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,14 +43,6 @@ public class SuperheroeController {
 
 	@Autowired
 	private SuperheroeDAO superheroeDAO;
-
-	@GetMapping("/p1")
-	@MedicionTiempoEjecucion
-	public String p1() throws InterruptedException {
-		Thread.sleep(1500);
-		System.out.println(superheroeDAO.findAll().size());
-		return "hey";
-	}
 
 	// http://localhost:8080/superheroes/getAll
 	@GetMapping("/getAll")
@@ -112,17 +105,51 @@ public class SuperheroeController {
 	}
 
 	// http://localhost:8080/superheroes/modifySuperheroe
-	@PutMapping("/modifySuperheroe")
+	@PutMapping("/modifySuperheroe/{uuid}")
 	@MedicionTiempoEjecucion
-	public void modificarSuperheroe(@RequestBody Superheroe superheroe) {
-		// TODO
+	public void modificarSuperheroe(@PathVariable String uuid, @RequestBody Superheroe sNuevo)
+			throws SuperheroeInexistenteException, NombreRepetidoBBDDException, ParamNecesarioInexistenteException,
+			PesoNegativoException {
+
+		if (!uuid.equals(sNuevo.getUuid()))
+			throw new ParamNecesarioInexistenteException(HttpStatus.BAD_REQUEST,
+					"Inconsistencia: distintos UUIDs entre el original y el modificado.");
+
+		Optional<Superheroe> optSOriginal = superheroeDAO.findByUuid(uuid);
+		if (optSOriginal.isEmpty())
+			throw new SuperheroeInexistenteException(HttpStatus.EXPECTATION_FAILED,
+					"No existía previamente ningún superheroe con identificador '" + uuid + "'.");
+
+		Superheroe sOriginal = optSOriginal.get();
+
+		if (!sNuevo.getNombre().equals(sOriginal.getNombre()) /* Nuevo nombre */
+				&& superheroeDAO.existsByNombre(sNuevo.getNombre()) /* Nombre UNQ ya existía por otra parte */)
+			throw new NombreRepetidoBBDDException(HttpStatus.CONFLICT, "Ya existe otro superhéroe con este nombre.");
+
+		gestionarSuperheroesService.modificarSuperheroe(sOriginal, sNuevo.getNombre(), sNuevo.getPeso(),
+				sNuevo.getFechaNacimiento());
 	}
 
 	// http://localhost:8080/superheroes/deleteSuperheroe
 	@DeleteMapping("/deleteSuperheroe")
 	@MedicionTiempoEjecucion
-	public void eliminarSuperheroe(@RequestBody Superheroe superheroe) {
-		// TODO
+	public void eliminarSuperheroe(@PathVariable String uuid) throws SuperheroeInexistenteException {
+
+		if (!superheroeDAO.existsByUuid(uuid))
+			throw new SuperheroeInexistenteException(HttpStatus.NOT_FOUND,
+					"No existía ningún superheroe con identificador '" + uuid + "'.");
+
+		gestionarSuperheroesService.eliminarSuperheroe(uuid);
+	}
+
+	@GetMapping("/p1")
+	public String p1() throws ParamNecesarioInexistenteException, PesoNegativoException {
+		Superheroe s = gestionarSuperheroesService.crearSuperheroe("Jose", 15.0, LocalDateTime.now());
+		System.out.println(superheroeDAO.existsByUuid(s.getUuid()));
+
+		gestionarSuperheroesService.eliminarSuperheroe(s.getUuid());
+		System.out.println(superheroeDAO.existsByUuid(s.getUuid()));
+		return "hey";
 	}
 
 }

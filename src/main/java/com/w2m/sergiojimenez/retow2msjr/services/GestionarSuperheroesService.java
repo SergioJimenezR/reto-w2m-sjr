@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.w2m.sergiojimenez.retow2msjr.dao.SuperheroeDAO;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.ParamNecesarioInexistenteException;
@@ -16,7 +17,7 @@ public class GestionarSuperheroesService {
 	@Autowired
 	private SuperheroeDAO superheroeDAO;
 
-	public void crearSuperheroe(String nombre, Double peso, LocalDateTime fechaNacimiento)
+	public Superheroe crearSuperheroe(String nombre, Double peso, LocalDateTime fechaNacimiento)
 			throws ParamNecesarioInexistenteException, PesoNegativoException {
 
 		Superheroe s = new Superheroe();
@@ -25,14 +26,23 @@ public class GestionarSuperheroesService {
 		s.setFechaNacimiento(fechaNacimiento);
 
 		superheroeDAO.save(s);
+		
+		return s;
 	}
 
-	public void modificarSuperheroe(Superheroe superheroe) {
-		// TODO
+	public void modificarSuperheroe(Superheroe sOriginal, String nuevoNombre, Double nuevoPeso,
+			LocalDateTime nuevaFechaNacimiento) throws ParamNecesarioInexistenteException, PesoNegativoException {
+
+		sOriginal.setNombre(nuevoNombre);
+		sOriginal.setPeso(nuevoPeso);
+		sOriginal.setFechaNacimiento(nuevaFechaNacimiento);
+
+		superheroeDAO.save(sOriginal);
 	}
 
-	public void eliminarSuperheroe(Superheroe superheroe) {
-		// TODO
+	@Transactional
+	public void eliminarSuperheroe(String uuid) {
+		superheroeDAO.deleteByUuid(uuid);
 	}
 
 }
