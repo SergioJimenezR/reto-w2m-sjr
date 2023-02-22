@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.w2m.sergiojimenez.retow2msjr.annotations.MedicionTiempoEjecucion;
 import com.w2m.sergiojimenez.retow2msjr.dao.SuperheroeDAO;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.FormatoUUIDInvalidoException;
-import com.w2m.sergiojimenez.retow2msjr.exceptions.NoExistenSuperheroesException;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.NombreRepetidoBBDDException;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.ParamNecesarioInexistenteException;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.PesoNegativoException;
@@ -44,14 +43,37 @@ public class SuperheroeController {
 	@Autowired
 	private SuperheroeDAO superheroeDAO;
 
-	// http://localhost:8080/superheroes/getAll
+	/**
+	 * Método endpoint encargado de llevar a cabo la petición <<get>> para devolver
+	 * todos los súperhéroes encontrados en la base de datos. No requerirá de
+	 * parámetros de entrada, y devolverá la lista aunque se pueda encontrar vacía.
+	 * 
+	 * http://localhost:8080/superheroes/getAll
+	 *
+	 * @return Lista de superheroes.
+	 */
 	@GetMapping("/getAll")
 	@MedicionTiempoEjecucion
 	public List<Superheroe> getAll() {
-		return buscarSuperheroesService.obtenerTodos();
+
+		List<Superheroe> lista = buscarSuperheroesService.obtenerTodos();
+		return lista;
 	}
 
-	// http://localhost:8080/superheroes/getBy?id=...
+	/**
+	 * Método endpoint encargado de llevar a cabo la petición <<get>> para buscar a
+	 * un superheroe según su identificador único (UUID). Requerirá de
+	 * introducírsele el UUID a buscar, como RequestParam en el enlace URL de la
+	 * petición. Contiene cuestiones de eficiencia. Si no existe ningún superhéroe
+	 * con tal UUID, provoca un error 404 - NOT FOUND.
+	 * 
+	 * http://localhost:8080/superheroes/getBy?id=...
+	 * 
+	 * @param UUID del superhéroe a buscar.
+	 * @return Superhéroe encontrado.
+	 * @throws FormatoUUIDInvalidoException   en caso de formatear mal el UUID.
+	 * @throws SuperheroeInexistenteException en caso de no existir superheroe.
+	 */
 	@GetMapping("/getBy")
 	@MedicionTiempoEjecucion
 	public Superheroe getByUuid(@RequestParam String uuid)
@@ -68,22 +90,53 @@ public class SuperheroeController {
 		return buscarSuperheroesService.buscarPorUuid(uuid);
 	}
 
-	// http://localhost:8080/superheroes/getAllContaining/man
+	/**
+	 * Método endpoint encargado de llevar a cabo a petición <<get>> para buscar a
+	 * los superhéroes que contengan en su nombre la subcadena dada. Requerirá de
+	 * introducírsele dicha subcadena por PathVariable en la URL de la petición.
+	 * Devolverá una lista de las instancias de la clase Superheroe que incluyan tal
+	 * nombre, almacenadas en la base de datos, aunque se pueda encontrar vacía.
+	 * 
+	 * http://localhost:8080/superheroes/getAllContaining/man
+	 * 
+	 * @param Subcadena contenida en los nombres.
+	 * @return Lista de superheroes que contengan en su nombre tal subcadena.
+	 */
 	@GetMapping("getAllContaining/{patron}")
 	@MedicionTiempoEjecucion
-	public List<Superheroe> getAllContaining(@PathVariable String patron) throws NoExistenSuperheroesException {
+	public List<Superheroe> getAllContaining(@PathVariable String subcadena) {
 
-		List<Superheroe> lista = buscarSuperheroesService.obtenerLosQueContenganNombre(patron);
-		if (lista.isEmpty())
-			throw new NoExistenSuperheroesException(HttpStatus.NOT_FOUND, "No existen superheroes con este patrón.");
-
-		return lista;
+		return buscarSuperheroesService.obtenerLosQueContenganNombre(subcadena);
 	}
 
-	// http://localhost:8080/superheroes/nuevoSuperheroe
+	/**
+	 * Método endpoint encargado de registrar un nuevo superhéroe a partir de los
+	 * datos pasados por parámetro de entrada en la petición <<post>>. Dichos datos
+	 * vendrán dados en formato JSON, uno referido a cada atributo de la clase
+	 * Superheroe salvo el UUID, el cual se genera en backend. Además de crearlo,
+	 * también devuelve dicha instancia recién creada.
+	 * 
+	 * Se llevan a cabo distintos controles de Seguridad de la API como: revisar que
+	 * no exista ya un Superheroe con el nombre propuesto (al tratarse de Unique), u
+	 * otros controles en las anotaciones de validación y setters de la clase como
+	 * que el atributo peso deba ser positivo, o que el nombre sea obligatorio de
+	 * introducir (Not Null).
+	 * 
+	 * http://localhost:8080/superheroes/nuevoSuperheroe
+	 * 
+	 * @param info Mapa JSON que contiene los valores de los atributos de la
+	 *             instancia a crear.
+	 * @throws NombreRepetidoBBDDException        en caso de ya existir un
+	 *                                            superheroe con este nombre
+	 *                                            (Unique).
+	 * @throws ParamNecesarioInexistenteException en caso de no indicarse un nombre
+	 *                                            (Not Null).
+	 * @throws PesoNegativoException              en caso de indicarse un peso
+	 *                                            inválido (no positivo).
+	 */
 	@PostMapping("/nuevoSuperheroe")
 	@MedicionTiempoEjecucion
-	public void nuevoSuperheroe(@RequestBody Map<String, Object> info)
+	public Superheroe nuevoSuperheroe(@RequestBody Map<String, Object> info)
 			throws NombreRepetidoBBDDException, ParamNecesarioInexistenteException, PesoNegativoException {
 
 		JSONObject jso = new JSONObject(info);
@@ -94,37 +147,71 @@ public class SuperheroeController {
 					"Ya existe un superheroe con el nombre " + nombre + ".");
 
 		Double peso = jso.optDouble("peso");
-		LocalDateTime fechaNacimiento = Utilidades.parseStringToLocalDateTime(jso.optString("fechaNacimiento"));
 
-		gestionarSuperheroesService.crearSuperheroe(nombre, peso, fechaNacimiento);
+		LocalDateTime fechaNacimiento = Utilidades.parseStringToLocalDateTime(jso.optString("fechaNacimiento"));
+		/* Según el formato del String de la fecha indicado en clase Utilidades. */
+
+		return gestionarSuperheroesService.crearSuperheroe(nombre, peso, fechaNacimiento);
 	}
 
-	// http://localhost:8080/superheroes/modifySuperheroe
+	/**
+	 * Método endpoint para posibilitar la modificación de la información de un
+	 * superhéroe según la presente petición <<put>>. Más concretamente, se pasará
+	 * por parámetro de entrada el identificador único UUID del superhéroe que se
+	 * quiere modificar, y una instancia portada en JSON por la red e interceptada
+	 * por Spring, la cual contiene los nuevos valores.
+	 * 
+	 * Se llevarán numerosos controles como que: el UUID deba seguir siendo el
+	 * mismo; que el superhéroe que se quiere modificar debiera existir previamente
+	 * en la base de datos; o que si se quiere cambiar el nombre (al tratarse de
+	 * Unique) no exista ningún otro superhéroe con ese nombre.
+	 * 
+	 * http://localhost:8080/superheroes/modifySuperheroe
+	 *
+	 * @param uuid   referido al identificador único del superhéroe a modificar.
+	 * @param sNuevo referido a la instancia del Superheroe con los valores nuevos.
+	 * @throws SuperheroeInexistenteException     en caso de no existir previamente.
+	 * @throws NombreRepetidoBBDDException        en caso de existir otro superhéroe
+	 *                                            con el nuevo nombre (Unique).
+	 * @throws ParamNecesarioInexistenteException en caso de no indicarse nombre
+	 *                                            (Not Null).
+	 * @throws PesoNegativoException              en caso de indicarse un peso
+	 *                                            inválido (no positivo).
+	 */
 	@PutMapping("/modifySuperheroe/{uuid}")
 	@MedicionTiempoEjecucion
 	public void modificarSuperheroe(@PathVariable String uuid, @RequestBody Superheroe sNuevo)
 			throws SuperheroeInexistenteException, NombreRepetidoBBDDException, ParamNecesarioInexistenteException,
 			PesoNegativoException {
 
+		/*
+		 * Dado que el UUID no puede cambiar, deberá ser igual antes y después.
+		 */
 		if (!uuid.equals(sNuevo.getUuid()))
 			throw new ParamNecesarioInexistenteException(HttpStatus.BAD_REQUEST,
 					"Inconsistencia: distintos UUIDs entre el original y el modificado.");
 
 		Optional<Superheroe> optSOriginal = superheroeDAO.findByUuid(uuid);
-		if (optSOriginal.isEmpty())
+		if (optSOriginal.isEmpty()) // Si originalmente no existía el superhéroe que se quiere modificar:
 			throw new SuperheroeInexistenteException(HttpStatus.EXPECTATION_FAILED,
 					"No existía previamente ningún superheroe con identificador '" + uuid + "'.");
 
 		Superheroe sOriginal = optSOriginal.get();
 
-		if (!sNuevo.getNombre().equals(sOriginal.getNombre()) /* Nuevo nombre */
-				&& superheroeDAO.existsByNombre(sNuevo.getNombre()) /* Nombre UNQ ya existía por otra parte */)
+		if (!sNuevo.getNombre().equals(sOriginal.getNombre()) /* Se quiere modificar el nombre */
+				&& superheroeDAO.existsByNombre(sNuevo.getNombre()) /* Nombre Unique ya existía por otra parte */)
 			throw new NombreRepetidoBBDDException(HttpStatus.CONFLICT, "Ya existe otro superhéroe con este nombre.");
 
 		gestionarSuperheroesService.modificarSuperheroe(sOriginal, sNuevo.getNombre(), sNuevo.getPeso(),
-				sNuevo.getFechaNacimiento());
+				sNuevo.getFechaNacimiento()); // Efectuación de la modificación.
 	}
 
+	/**
+	 * Método endpoint encargado de manejar las peticiones <<delete>> para eliminar un superhéroe de la base de datos. Se requerirá introducir
+	 * 
+	 * @param uuid
+	 * @throws SuperheroeInexistenteException
+	 */
 	// http://localhost:8080/superheroes/deleteSuperheroe
 	@DeleteMapping("/deleteSuperheroe")
 	@MedicionTiempoEjecucion
@@ -135,15 +222,6 @@ public class SuperheroeController {
 					"No existía ningún superheroe con identificador '" + uuid + "'.");
 
 		gestionarSuperheroesService.eliminarSuperheroe(uuid);
-	}
-
-	@GetMapping("/p1")
-	public String p1() throws ParamNecesarioInexistenteException, PesoNegativoException {
-		superheroeDAO.deleteAll();
-		Superheroe s = gestionarSuperheroesService.crearSuperheroe("Jose", 15.0, LocalDateTime.now());
-		System.out.println(superheroeDAO.existsByUuid(s.getUuid()));
-
-		return superheroeDAO.findAll().size() + ".";
 	}
 
 }
