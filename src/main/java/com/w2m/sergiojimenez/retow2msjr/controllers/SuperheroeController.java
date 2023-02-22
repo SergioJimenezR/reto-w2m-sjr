@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.w2m.sergiojimenez.retow2msjr.annotations.MedicionTiempoEjecucion;
 import com.w2m.sergiojimenez.retow2msjr.dao.SuperheroeDAO;
+import com.w2m.sergiojimenez.retow2msjr.exceptions.ExceptionHTTPPolimorfica;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.FormatoUUIDInvalidoException;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.NombreRepetidoBBDDException;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.ParamNecesarioInexistenteException;
@@ -56,8 +57,7 @@ public class SuperheroeController {
 	@MedicionTiempoEjecucion
 	public List<Superheroe> getAll() {
 
-		List<Superheroe> lista = buscarSuperheroesService.obtenerTodos();
-		return lista;
+		return buscarSuperheroesService.obtenerTodos();
 	}
 
 	/**
@@ -76,8 +76,7 @@ public class SuperheroeController {
 	 */
 	@GetMapping("/getBy")
 	@MedicionTiempoEjecucion
-	public Superheroe getByUuid(@RequestParam String uuid)
-			throws FormatoUUIDInvalidoException, SuperheroeInexistenteException {
+	public Superheroe getByUuid(@RequestParam String uuid) throws ExceptionHTTPPolimorfica {
 
 		if (!Utilidades.checkFormatoUuid(uuid)) // Eficiencia - Regex.
 			/*
@@ -136,8 +135,7 @@ public class SuperheroeController {
 	 */
 	@PostMapping("/nuevoSuperheroe")
 	@MedicionTiempoEjecucion
-	public Superheroe nuevoSuperheroe(@RequestBody Map<String, Object> info)
-			throws NombreRepetidoBBDDException, ParamNecesarioInexistenteException, PesoNegativoException {
+	public Superheroe nuevoSuperheroe(@RequestBody Map<String, Object> info) throws ExceptionHTTPPolimorfica {
 
 		JSONObject jso = new JSONObject(info);
 
@@ -181,8 +179,7 @@ public class SuperheroeController {
 	@PutMapping("/modifySuperheroe/{uuid}")
 	@MedicionTiempoEjecucion
 	public void modificarSuperheroe(@PathVariable String uuid, @RequestBody Superheroe sNuevo)
-			throws SuperheroeInexistenteException, NombreRepetidoBBDDException, ParamNecesarioInexistenteException,
-			PesoNegativoException {
+			throws ExceptionHTTPPolimorfica {
 
 		/*
 		 * Dado que el UUID no puede cambiar, deberá ser igual antes y después.
@@ -207,15 +204,20 @@ public class SuperheroeController {
 	}
 
 	/**
-	 * Método endpoint encargado de manejar las peticiones <<delete>> para eliminar un superhéroe de la base de datos. Se requerirá introducir
+	 * Método endpoint encargado de manejar las peticiones <<delete>> para eliminar
+	 * un superhéroe de la base de datos. Se requerirá introducir el UUID del
+	 * superhéroe a eliminar y no devolverá nada.
 	 * 
-	 * @param uuid
-	 * @throws SuperheroeInexistenteException
+	 * Se estará controlando que el superhéroe en cuestión exista.
+	 * 
+	 * http://localhost:8080/superheroes/deleteSuperheroe
+	 * 
+	 * @param uuid referido al identificador del superhéroe a eliminar.
+	 * @throws SuperheroeInexistenteException en caso de no existir el superhéroe.
 	 */
-	// http://localhost:8080/superheroes/deleteSuperheroe
 	@DeleteMapping("/deleteSuperheroe")
 	@MedicionTiempoEjecucion
-	public void eliminarSuperheroe(@PathVariable String uuid) throws SuperheroeInexistenteException {
+	public void eliminarSuperheroe(@PathVariable String uuid) throws ExceptionHTTPPolimorfica {
 
 		if (!superheroeDAO.existsByUuid(uuid))
 			throw new SuperheroeInexistenteException(HttpStatus.NOT_FOUND,
