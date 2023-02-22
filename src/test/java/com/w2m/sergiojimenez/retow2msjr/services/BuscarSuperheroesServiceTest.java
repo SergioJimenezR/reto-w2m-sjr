@@ -45,7 +45,7 @@ class BuscarSuperheroesServiceTest {
 	void testObtenerTodos() throws ParamNecesarioInexistenteException, PesoNegativoException {
 
 		superheroeDAO.deleteAll();
-		assertEquals(buscarSuperheroesService.obtenerTodos().size(), 0);
+		assertEquals(0, buscarSuperheroesService.obtenerTodos().size());
 
 		superheroeDAO.saveAll(datosIniciales);
 		assertEquals(buscarSuperheroesService.obtenerTodos().size(), datosIniciales.size());
@@ -76,7 +76,7 @@ class BuscarSuperheroesServiceTest {
 	void testObtenerLosQueContenganNombre() throws ParamNecesarioInexistenteException, PesoNegativoException {
 
 		superheroeDAO.deleteAll();
-		assertEquals(buscarSuperheroesService.obtenerLosQueContenganNombre("(Nombre no contenido)").size(), 0);
+		assertEquals(0, buscarSuperheroesService.obtenerLosQueContenganNombre("(Nombre no contenido)").size());
 
 		int contador = 0;
 		for (Superheroe s : datosIniciales)
