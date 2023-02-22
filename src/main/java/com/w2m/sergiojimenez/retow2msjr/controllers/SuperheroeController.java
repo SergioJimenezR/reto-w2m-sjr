@@ -47,13 +47,8 @@ public class SuperheroeController {
 	// http://localhost:8080/superheroes/getAll
 	@GetMapping("/getAll")
 	@MedicionTiempoEjecucion
-	public List<Superheroe> getAll() throws NoExistenSuperheroesException {
-
-		List<Superheroe> lista = buscarSuperheroesService.obtenerTodos();
-		if (lista.isEmpty())
-			throw new NoExistenSuperheroesException(HttpStatus.NOT_FOUND, "No existe ningún superheroe.");
-
-		return lista;
+	public List<Superheroe> getAll() {
+		return buscarSuperheroesService.obtenerTodos();
 	}
 
 	// http://localhost:8080/superheroes/getBy?id=...
@@ -144,12 +139,11 @@ public class SuperheroeController {
 
 	@GetMapping("/p1")
 	public String p1() throws ParamNecesarioInexistenteException, PesoNegativoException {
+		superheroeDAO.deleteAll();
 		Superheroe s = gestionarSuperheroesService.crearSuperheroe("Jose", 15.0, LocalDateTime.now());
 		System.out.println(superheroeDAO.existsByUuid(s.getUuid()));
 
-		gestionarSuperheroesService.eliminarSuperheroe(s.getUuid());
-		System.out.println(superheroeDAO.existsByUuid(s.getUuid()));
-		return "hey";
+		return superheroeDAO.findAll().size() + ".";
 	}
 
 }

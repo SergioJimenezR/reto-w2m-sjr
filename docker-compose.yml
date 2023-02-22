@@ -1,0 +1,15 @@
+# Fuente de referencia: https://www.baeldung.com/dockerizing-spring-boot-application
+
+version: '3.9'
+
+services:
+    backend:
+        container_name: cont-api-w2m-sjr
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: img-api-w2m-sjr
+        ports:
+          - "8080:8080"
+
+# Nota: Al incluirse H2 como BD en memoria dentro del JAR, no hace falta desplegar ningún servicio más necesariamente.

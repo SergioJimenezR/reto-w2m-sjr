@@ -7,6 +7,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
+// Fuente de referencia: https://www.baeldung.com/spring-aop-annotation
+
 @Aspect
 @Component
 public class MedicionTiempoEjecucionAspecto {
