@@ -60,10 +60,10 @@ class GestionarSuperheroesServiceTest {
 	@Test
 	void testCrearSuperheroe() throws ParamNecesarioInexistenteException, PesoNegativoException {
 
-		assertEquals(dao.findAll().size(), 0);
+		assertEquals(0, dao.findAll().size());
 
 		Superheroe s = service.crearSuperheroe("Pepe", 5.0, LocalDateTime.now());
-		assertEquals(dao.findAll().size(), 1);
+		assertEquals(1, dao.findAll().size());
 
 		assertTrue(dao.findByUuid(s.getUuid()).get().equals(s));
 	}
@@ -72,12 +72,12 @@ class GestionarSuperheroesServiceTest {
 	void testModificarSuperheroe() throws ParamNecesarioInexistenteException, PesoNegativoException {
 
 		String anteriorNombre = "Pepe";
-		assertEquals(dao.existsByNombre(anteriorNombre), false); // Nombre libre
+		assertEquals(false, dao.existsByNombre(anteriorNombre)); // Nombre libre
 		double anteriorPeso = 5.0;
 		LocalDateTime anteriorFechaNacimiento = LocalDateTime.now();
 
 		String posteriorNombre = "Pedro";
-		assertEquals(dao.existsByNombre(posteriorNombre), false); // Nombre libre
+		assertEquals(false, dao.existsByNombre(posteriorNombre)); // Nombre libre
 		double posteriorPeso = 10.0;
 		LocalDateTime posteriorFechaNacimiento = LocalDateTime.now();
 

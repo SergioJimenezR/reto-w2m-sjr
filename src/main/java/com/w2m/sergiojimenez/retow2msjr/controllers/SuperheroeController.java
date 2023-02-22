@@ -156,13 +156,12 @@ public class SuperheroeController {
 	 * Método endpoint para posibilitar la modificación de la información de un
 	 * superhéroe según la presente petición <<put>>. Más concretamente, se pasará
 	 * por parámetro de entrada el identificador único UUID del superhéroe que se
-	 * quiere modificar, y una instancia portada en JSON por la red e interceptada
-	 * por Spring, la cual contiene los nuevos valores.
+	 * quiere modificar, y los demás valores nuevos contenidos en un Mapa JSON.
 	 * 
-	 * Se llevarán numerosos controles como que: el UUID deba seguir siendo el
-	 * mismo; que el superhéroe que se quiere modificar debiera existir previamente
-	 * en la base de datos; o que si se quiere cambiar el nombre (al tratarse de
-	 * Unique) no exista ningún otro superhéroe con ese nombre.
+	 * Se llevarán numerosos controles como que: que el superhéroe que se quiere
+	 * modificar debiera existir previamente en la base de datos; o que si se quiere
+	 * cambiar el nombre (al tratarse de Unique) no exista ningún otro superhéroe
+	 * con ese nombre.
 	 * 
 	 * http://localhost:8080/superheroes/modifySuperheroe
 	 *
@@ -178,15 +177,8 @@ public class SuperheroeController {
 	 */
 	@PutMapping("/modifySuperheroe/{uuid}")
 	@MedicionTiempoEjecucion
-	public void modificarSuperheroe(@PathVariable String uuid, @RequestBody Superheroe sNuevo)
+	public void modificarSuperheroe(@PathVariable String uuid, @RequestBody Map<String, Object> info)
 			throws ExceptionHTTPPolimorfica {
-
-		/*
-		 * Dado que el UUID no puede cambiar, deberá ser igual antes y después.
-		 */
-		if (!uuid.equals(sNuevo.getUuid()))
-			throw new ParamNecesarioInexistenteException(HttpStatus.BAD_REQUEST,
-					"Inconsistencia: distintos UUIDs entre el original y el modificado.");
 
 		Optional<Superheroe> optSOriginal = superheroeDAO.findByUuid(uuid);
 		if (optSOriginal.isEmpty()) // Si originalmente no existía el superhéroe que se quiere modificar:
@@ -195,12 +187,19 @@ public class SuperheroeController {
 
 		Superheroe sOriginal = optSOriginal.get();
 
-		if (!sNuevo.getNombre().equals(sOriginal.getNombre()) /* Se quiere modificar el nombre */
-				&& superheroeDAO.existsByNombre(sNuevo.getNombre()) /* Nombre Unique ya existía por otra parte */)
+		JSONObject jso = new JSONObject(info);
+
+		String nombreNuevo = jso.optString("nombre");
+		if (!nombreNuevo.equals(sOriginal.getNombre()) /* Se quiere modificar el nombre */
+				&& superheroeDAO.existsByNombre(nombreNuevo) /* Nombre Unique ya existía por otra parte */)
 			throw new NombreRepetidoBBDDException(HttpStatus.CONFLICT, "Ya existe otro superhéroe con este nombre.");
 
-		gestionarSuperheroesService.modificarSuperheroe(sOriginal, sNuevo.getNombre(), sNuevo.getPeso(),
-				sNuevo.getFechaNacimiento()); // Efectuación de la modificación.
+		Double peso = jso.optDouble("peso");
+
+		LocalDateTime fechaNacimiento = Utilidades.parseStringToLocalDateTime(jso.optString("fechaNacimiento"));
+		/* Según el formato del String de la fecha indicado en clase Utilidades. */
+
+		gestionarSuperheroesService.modificarSuperheroe(sOriginal, nombreNuevo, peso, fechaNacimiento);
 	}
 
 	/**
