@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.w2m.sergiojimenez.retow2msjr.annotations.MedicionTiempoEjecucion;
 import com.w2m.sergiojimenez.retow2msjr.dao.SuperheroeDAO;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.FormatoUUIDInvalidoException;
 import com.w2m.sergiojimenez.retow2msjr.exceptions.NoExistenSuperheroesException;
@@ -42,8 +43,17 @@ public class SuperheroeController {
 	@Autowired
 	private SuperheroeDAO superheroeDAO;
 
+	@GetMapping("/p1")
+	@MedicionTiempoEjecucion
+	public String p1() throws InterruptedException {
+		Thread.sleep(1500);
+		System.out.println(superheroeDAO.findAll().size());
+		return "hey";
+	}
+
 	// http://localhost:8080/superheroes/getAll
 	@GetMapping("/getAll")
+	@MedicionTiempoEjecucion
 	public List<Superheroe> getAll() throws NoExistenSuperheroesException {
 
 		List<Superheroe> lista = buscarSuperheroesService.obtenerTodos();
@@ -55,6 +65,7 @@ public class SuperheroeController {
 
 	// http://localhost:8080/superheroes/getBy?id=...
 	@GetMapping("/getBy")
+	@MedicionTiempoEjecucion
 	public Superheroe getByUuid(@RequestParam String uuid)
 			throws FormatoUUIDInvalidoException, SuperheroeInexistenteException {
 
@@ -71,6 +82,7 @@ public class SuperheroeController {
 
 	// http://localhost:8080/superheroes/getAllContaining/man
 	@GetMapping("getAllContaining/{patron}")
+	@MedicionTiempoEjecucion
 	public List<Superheroe> getAllContaining(@PathVariable String patron) throws NoExistenSuperheroesException {
 
 		List<Superheroe> lista = buscarSuperheroesService.obtenerLosQueContenganNombre(patron);
@@ -82,8 +94,9 @@ public class SuperheroeController {
 
 	// http://localhost:8080/superheroes/nuevoSuperheroe
 	@PostMapping("/nuevoSuperheroe")
-	public void nuevoSuperheroe(@RequestBody Map<String, Object> info) throws NombreRepetidoBBDDException,
-			ParamNecesarioInexistenteException, PesoNegativoException {
+	@MedicionTiempoEjecucion
+	public void nuevoSuperheroe(@RequestBody Map<String, Object> info)
+			throws NombreRepetidoBBDDException, ParamNecesarioInexistenteException, PesoNegativoException {
 
 		JSONObject jso = new JSONObject(info);
 
@@ -100,12 +113,14 @@ public class SuperheroeController {
 
 	// http://localhost:8080/superheroes/modifySuperheroe
 	@PutMapping("/modifySuperheroe")
+	@MedicionTiempoEjecucion
 	public void modificarSuperheroe(@RequestBody Superheroe superheroe) {
 		// TODO
 	}
 
 	// http://localhost:8080/superheroes/deleteSuperheroe
 	@DeleteMapping("/deleteSuperheroe")
+	@MedicionTiempoEjecucion
 	public void eliminarSuperheroe(@RequestBody Superheroe superheroe) {
 		// TODO
 	}

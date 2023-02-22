@@ -70,6 +70,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
+		<!-- (Librería facilitadora del mantenimiento de scripts DDL a través de ddl-auto en application.properties). -->
 
 		<!-- Spring Boot Starter Validation -->
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation -->
