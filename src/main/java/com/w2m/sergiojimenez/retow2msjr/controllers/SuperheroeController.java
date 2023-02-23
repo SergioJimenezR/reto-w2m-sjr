@@ -57,15 +57,6 @@ public class SuperheroeController {
 	@GetMapping("/getAll")
 	@MedicionTiempoEjecucion
 	public List<Superheroe> getAll() {
-		try {
-			superheroeDAO.save(new Superheroe("Pepe", 5.0, LocalDateTime.now()));
-		} catch (ParamNecesarioInexistenteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (PesoNegativoException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		return buscarSuperheroesService.obtenerTodos();
 	}
