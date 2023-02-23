@@ -19,7 +19,22 @@ public class CentralizadorExcepciones extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(ExceptionHTTPPolimorfica.class)
 	public ResponseEntity<Object> handleMyCustomException(ExceptionHTTPPolimorfica exception, WebRequest request) {
+
+		/*
+		 * Con este primer caso (throw new ResponseStatusException), seguiríamos
+		 * provocando el mensaje de error:
+		 */
+		/*
+		 * throw new ResponseStatusException(exception.getStatus(),
+		 * exception.getMessage());
+		 */
+
+		/*
+		 * En cambio, con este segundo caso, el error no será tan "feo", sino que se
+		 * manejará de esta otra forma, mostrando el error:
+		 */
 		return new ResponseEntity<>(exception.getMessage(), exception.getStatus());
+
 	}
 
 }

@@ -31,6 +31,10 @@ public class MedicionTiempoEjecucionAspecto {
 		else
 			LOGGER.info(mensaje);
 
+		/*
+		 * Dicho Logger se estará mostrando en la consola en tiempo de ejecución.
+		 */
+
 		return result;
 
 	}
