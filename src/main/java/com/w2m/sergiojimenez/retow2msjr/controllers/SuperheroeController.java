@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,6 +57,15 @@ public class SuperheroeController {
 	@GetMapping("/getAll")
 	@MedicionTiempoEjecucion
 	public List<Superheroe> getAll() {
+		try {
+			superheroeDAO.save(new Superheroe("Pepe", 5.0, LocalDateTime.now()));
+		} catch (ParamNecesarioInexistenteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PesoNegativoException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		return buscarSuperheroesService.obtenerTodos();
 	}
@@ -64,24 +74,28 @@ public class SuperheroeController {
 	 * Método endpoint encargado de llevar a cabo la petición <<get>> para buscar a
 	 * un superheroe según su identificador único (UUID). Requerirá de
 	 * introducírsele el UUID a buscar, como RequestParam en el enlace URL de la
-	 * petición. Contiene cuestiones de eficiencia. Si no existe ningún superhéroe
-	 * con tal UUID, provoca un error 404 - NOT FOUND.
+	 * petición. Además, utiliza una Caché para almacenar el Superheroe del UUID,
+	 * mejorando la eficiencia de la aplicación. Contiene además otra cuestión de
+	 * seguridad/eficiencia. Si no existe ningún superhéroe con tal UUID, provoca un
+	 * error 404 - NOT FOUND.
 	 * 
-	 * http://localhost:8080/superheroes/getBy?id=...
+	 * http://localhost:8080/superheroes/getByUuid?uuid=...
 	 * 
 	 * @param UUID del superhéroe a buscar.
 	 * @return Superhéroe encontrado.
 	 * @throws FormatoUUIDInvalidoException   en caso de formatear mal el UUID.
 	 * @throws SuperheroeInexistenteException en caso de no existir superheroe.
 	 */
-	@GetMapping("/getBy")
+	@Cacheable("cacheBuscarSuperheroe")
+	@GetMapping("/getByUuid")
 	@MedicionTiempoEjecucion
 	public Superheroe getByUuid(@RequestParam String uuid) throws ExceptionHTTPPolimorfica {
 
-		if (!Utilidades.checkFormatoUuid(uuid)) // Eficiencia - Regex.
+		if (!Utilidades.checkFormatoUuid(uuid)) // Seguridad y Eficiencia - Regex - Evita SQLInjection.
 			/*
-			 * Aunque no sería necesario hacer esta comprobación, se realiza por eficiencia.
-			 * Si el id es inválido per se, nos ahorramos el coste de hacer la consulta.
+			 * Eficiencia: Aunque podría no considerarse necesario hacer esta comprobación,
+			 * se realiza por eficiencia. Si el id es inválido per se, nos ahorramos el
+			 * coste de hacer la consulta.
 			 */
 			throw new FormatoUUIDInvalidoException(HttpStatus.FORBIDDEN,
 					"El UUID proporcionado '" + uuid + "' no cumple con el formato.");
@@ -103,6 +117,7 @@ public class SuperheroeController {
 	 */
 	@GetMapping("getAllContaining/{patron}")
 	@MedicionTiempoEjecucion
+	@Cacheable("cache1")
 	public List<Superheroe> getAllContaining(@PathVariable String subcadena) {
 
 		return buscarSuperheroesService.obtenerLosQueContenganNombre(subcadena);

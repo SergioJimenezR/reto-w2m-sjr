@@ -114,8 +114,22 @@
 		Lo demás sigue igual, salvo que el package javax.persistence de Spring Data JPA 
 		se encuentra ahora en jakarta.persistence --> 
 		
+		<!-- Spring Boot Starter Cache -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-cache -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		
+		<!-- Ehcache -->
+		<!-- https://mvnrepository.com/artifact/org.ehcache/ehcache -->
+		<dependency>
+			<groupId>org.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+		</dependency>
+	
 	</dependencies>
-
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -123,6 +137,8 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 			
+		<!-- INFORMES DE CALIDAD -->
+		
 			<!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
@@ -210,6 +226,9 @@
 	</build>
 	
 	<reporting>
+	
+		<!-- INFORMES DE CALIDAD -->
+		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
